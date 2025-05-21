@@ -15,24 +15,29 @@ import "fmt"
 你可以假设除了整数 0 之外，这个整数不会以零开头。
 */
 func main() {
-	fmt.Println(demo6([]int{1, 1, 1, 2, 2, 3, 3, 9}))
+	fmt.Println(demo6([]int{2, 9, 9, 9}))
 }
 
 func demo6(nums []int) []int {
-	return add_1(nums, len(nums)-1)
-}
-
-func add_1(nums []int, i int) []int {
-	index := i
-	result := []int{}
-	if nums[index] == 9 && index > 0 {
-		result = add_1(nums, index-1)
-	} else if nums[index] == 9 && index == 0 {
-		result = append(result, 1)
-		result = append(result, nums[:index]...)
-	} else if nums[index] < 9 {
-		result = append(result, nums[:index]...)
-		result = append(result, nums[index]+1)
+	add_one := false
+	for i := len(nums) - 1; i >= 0; i-- {
+		// 如果元素 = 9 那么进一
+		if nums[i] == 9 {
+			nums[i] = 0
+			// 如果是首位数字，那么要额外补1
+			if i == 0 {
+				add_one = true
+				break
+			}
+		} else {
+			nums[i] += 1
+			break
+		}
 	}
+	var result []int
+	if add_one {
+		result = append(result, 1)
+	}
+	result = append(result, nums...)
 	return result
 }
