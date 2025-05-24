@@ -13,7 +13,7 @@ func main() {
 	demo4()
 	// 赋值运算
 	demo5()
-	// 指针
+	// 1.指针
 	demo6()
 	// 运算优先级
 	demo7()

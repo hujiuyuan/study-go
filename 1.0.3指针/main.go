@@ -84,7 +84,7 @@ func demo2() {
 }
 
 /*
-指针、unsafe.Pointer 和 uintptr
+1.指针、unsafe.Pointer 和 uintptr
 在 Go 中，指针不能直接参与计算，否则会在编译的时候就包错：
 ```
 var a int
