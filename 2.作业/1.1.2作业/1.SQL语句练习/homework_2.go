@@ -18,33 +18,80 @@ import (
 var Db *gorm.DB
 
 func main() {
+	// 自动迁移数据库结构
 	Db.AutoMigrate(&Account{}, &Transaction{})
 
-	amount, _ := decimal.NewFromString("1000.50")
-	Db.Create(&Account{Id: 1, Balance: amount})
-	Db.Create(&Account{Id: 2, Balance: amount})
+	//// 初始化账户
+	//amount, _ := decimal.NewFromString("1000.50")
+	//Db.Create(&Account{Id: 1, Balance: amount})
+	//Db.Create(&Account{Id: 2, Balance: amount})
 
+	// 开始事务
 	tx := Db.Begin()
 	defer func() {
-		if err := recover(); err != nil {
+		if r := recover(); r != nil {
 			tx.Rollback()
+			fmt.Println("Transaction rolled back due to panic:", r)
 		}
 	}()
 
+	// 检查是否存在A、B两个账户
 	var A, B Account
-	tx.Model(&A).Where("id = ?", 1)
-	tx.Model(&B).Where("id = ?", 2)
-	money := decimal.NewFromInt(100)
-	if decimal.Max(A.Balance, money) == money {
-		tx.Create(&Transaction{Amount: amount, ToAccountId: B.Id, FromAccountId: A.Id})
-		tx.Model(&A).Updates(Account{Balance: amount.Sub(money)})
-		tx.Model(&B).Updates(Account{Balance: amount.Add(money)})
+	if err := tx.Where("id = ?", 1).First(&A).Error; err != nil {
+		tx.Rollback()
+		fmt.Println("Transaction rolled back due to error:", err)
 	}
 
-	if err := tx.Commit().Error; err != nil {
-		fmt.Println("Failed to commit transaction:", err)
-		return
+	if err := tx.Where("id = ?", 2).First(&B).Error; err != nil {
+		tx.Rollback()
+		fmt.Println("Transaction rolled back due to error:", err)
 	}
+
+	A.printInfo()
+	B.printInfo()
+
+	// 定义转账金额
+	money := decimal.NewFromInt(500)
+	//fmt.Println("判断A的余额")
+	if A.Balance.LessThan(money) {
+		tx.Rollback()
+		fmt.Println("A的余额不足不能转账")
+	}
+
+	//fmt.Println("A的账户扣款")
+	if err := tx.Model(&A).Where("id = ?", A.Id).Update("balance", A.Balance.Sub(money)).Error; err != nil {
+		tx.Rollback()
+		fmt.Println("A的账户扣款失败", err)
+	}
+	//fmt.Println("B的账户收款")
+	if err := tx.Model(&B).Where("id = ?", B.Id).Update("balance", B.Balance.Add(money)).Error; err != nil {
+		tx.Rollback()
+		fmt.Println("B的账户收款失败", err)
+	}
+
+	//fmt.Println("记录转账记录")
+	if err := tx.Create(&Transaction{FromAccountId: A.Id, ToAccountId: B.Id, Amount: money}).Error; err != nil {
+		tx.Rollback()
+		fmt.Println("记录转账记录失败", err)
+	}
+	if err := tx.Commit().Error; err != nil {
+		tx.Rollback()
+		fmt.Println("事务提交失败", err)
+	}
+
+	var amounts []Account
+	Db.Find(&amounts)
+
+	for _, account := range amounts {
+		account.printInfo()
+	}
+
+	var transactions []Transaction
+	Db.Find(&transactions)
+	for _, t := range transactions {
+		t.printInfo()
+	}
+
 }
 
 func init() {
@@ -68,13 +115,21 @@ func init() {
 }
 
 type Transaction struct {
-	Id            uint64          `gorm:"primaryKey comment:主键;"`
+	Id            uint64          `gorm:"primaryKey; comment:主键;"`
 	FromAccountId uint64          `gorm:"type: bigint; comment:关联转出账户ID;"`
 	ToAccountId   uint64          `gorm:"type: bigint; comment:关联转入账户ID;"`
 	Amount        decimal.Decimal `gorm:"type: decimal(10,2);comment:账户余额;"`
 }
 
 type Account struct {
-	Id      uint64          `gorm:"primaryKey comment:主键;"`
+	Id      uint64          `gorm:"primaryKey; comment:主键;"`
 	Balance decimal.Decimal `gorm:"type: decimal(10,2);comment:账户余额;"`
+}
+
+func (t *Transaction) printInfo() {
+	fmt.Printf("Transaction info: Id:%d; FromAccountId: %d; ToAccountId:%d;Amount:%s;", t.Id, t.FromAccountId, t.ToAccountId, t.Amount)
+}
+
+func (a *Account) printInfo() {
+	fmt.Printf("Account info: Id:%d Balance:%s \n", a.Id, a.Balance)
 }
