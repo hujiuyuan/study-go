@@ -130,7 +130,7 @@ type Post struct {
 }
 
 func (post *Post) printInfo() {
-	fmt.Printf("【用户信息】Id:%d, AuthorId:%s, Title:%s, Data:%s, CreateTime:%s, UpdateTime:%s\n", post.Id, post.AuthorId, post.Title, post.Data[:10]+"……", post.CreateTime.Format(time.DateTime), post.UpdateTime.Format(time.DateTime))
+	fmt.Printf("【用户信息】Id:%d, AuthorId:%d, Title:%s, Data:%s, CreateTime:%s, UpdateTime:%s\n", post.Id, post.AuthorId, post.Title, post.Data[:12]+"……", post.CreateTime.Format(time.DateTime), post.UpdateTime.Format(time.DateTime))
 }
 
 type Comment struct {
@@ -143,7 +143,7 @@ type Comment struct {
 }
 
 func (comment *Comment) printInfo() {
-	fmt.Printf("【用户信息】Id:%d, AuthorId:%s, PostId:%s, Remake:%s, CreateTime:%s, UpdateTime:%s\n", comment.Id, comment.AuthorId, comment.PostId, comment.Remake[:10]+"……", comment.CreateTime.Format(time.DateTime), comment.UpdateTime.Format(time.DateTime))
+	fmt.Printf("【用户信息】Id:%d, AuthorId:%d, PostId:%d, Remake:%s, CreateTime:%s, UpdateTime:%s\n", comment.Id, comment.AuthorId, comment.PostId, comment.Remake[:18]+"……", comment.CreateTime.Format(time.DateTime), comment.UpdateTime.Format(time.DateTime))
 }
 
 func Map[T, U any](slice []T, f func(T) U) []U {
