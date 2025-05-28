@@ -3,6 +3,7 @@ module gorm_study
 go 1.24
 
 require (
+	github.com/shopspring/decimal v1.4.0
 	gorm.io/driver/mysql v1.5.7
 	gorm.io/gorm v1.30.0
 )

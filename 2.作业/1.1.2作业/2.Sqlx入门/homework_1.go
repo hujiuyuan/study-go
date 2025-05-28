@@ -46,10 +46,10 @@ func init() {
 func main() {
 	DB.AutoMigrate(&Employees{})
 	employees := []*Employees{
-		{Id: 1, Name: "这是一个姓名1", Department: "部门1", Salary: 10000.0},
-		{Id: 2, Name: "这是一个姓名2", Department: "技术部", Salary: 12000.0},
-		{Id: 3, Name: "这是一个姓名3", Department: "技术部", Salary: 13000.0},
-		{Id: 4, Name: "这是一个姓名4", Department: "部门1", Salary: 14000.0},
+		//{Id: 1, Name: "这是一个姓名1", Department: "部门1", Salary: 10000.0},
+		//{Id: 2, Name: "这是一个姓名2", Department: "技术部", Salary: 12000.0},
+		{Id: 5, Name: "这是一个姓名5", Department: "技术部", Salary: 15000.0},
+		//{Id: 4, Name: "这是一个姓名4", Department: "部门1", Salary: 14000.0},
 	}
 	DB.Create(&employees)
 
