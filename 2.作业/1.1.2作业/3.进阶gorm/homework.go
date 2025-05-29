@@ -66,6 +66,22 @@ func main() {
 		fmt.Println("没查到账户")
 	} else {
 		user_1.printInfo()
+
+		//posts := user_1.Posts
+		//for _, post := range posts {
+		//	post.printInfo()
+		//}
+		//
+		//comments := Map(posts, func(post Post) []Comment {
+		//	return post.Comments
+		//})
+		//for _, coms := range comments {
+		//	for _, comment := range coms {
+		//		comment.printInfo()
+		//	}
+		//
+		//}
+
 		var search_post []Post
 		postResult := dbClient.Where("author_id = ?", user_1.Id).Find(&search_post)
 		if postResult.RowsAffected == 0 {
@@ -114,6 +130,7 @@ type User struct {
 	Salt       string    `gorm:"type:varchar(255); comment:密码加密salt"`
 	CreateTime time.Time `gorm:"type:datetime; autoCreateTime; comment:创建时间"`
 	UpdateTime time.Time `gorm:"type:datetime; autoUpdateTime; comment:更新时间"`
+	Posts      []Post    `gorm:"foreignKey:AuthorId;references:Id;"`
 }
 
 func (user *User) printInfo() {
@@ -127,6 +144,7 @@ type Post struct {
 	Data       string    `gorm:"type:text; comment:文章"`
 	CreateTime time.Time `gorm:"type:datetime; autoCreateTime; comment:创建时间"`
 	UpdateTime time.Time `gorm:"type:datetime; autoUpdateTime; comment:更新时间"`
+	Comments   []Comment `gorm:"foreignkey:PostId"`
 }
 
 func (post *Post) printInfo() {
