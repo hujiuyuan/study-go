@@ -8,6 +8,7 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/golang-jwt/jwt/v4"
 	"net/http"
+	"time"
 )
 
 type Login struct {
@@ -27,10 +28,13 @@ func CheckLogin(c *gin.Context) {
 		c.JSON(http.StatusUnauthorized, gin.H{"status": "unauthorized"})
 		return
 	}
-
 	checkPassword := GenerateMD5Hash(user.Salt, loginParam.Password)
 	if user.Password == checkPassword {
-		jwtStr := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.MapClaims{"userId": user.ID, "username": user.Username})
+		jwtStr := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.MapClaims{
+			"userId":   user.ID,
+			"username": user.Username,
+			"exp":      time.Now().Add(time.Hour * 24).Unix(),
+		})
 		c.JSON(http.StatusOK, gin.H{"data": jwtStr})
 		return
 	}

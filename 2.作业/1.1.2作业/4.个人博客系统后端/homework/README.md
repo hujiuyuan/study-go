@@ -16,4 +16,7 @@ go get -u github.com/gin-gonic/gin
 -- 引入jwt
 go get github.com/golang-jwt/jwt/v4
 
+-- 引入UUID
+go get github.com/google/uuid
+
 ```
