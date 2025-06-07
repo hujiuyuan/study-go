@@ -5,6 +5,7 @@ import (
 	"blog-backend/entity"
 	"crypto/md5"
 	"encoding/hex"
+	"fmt"
 	"github.com/gin-gonic/gin"
 	"github.com/golang-jwt/jwt/v4"
 	"net/http"
@@ -16,7 +17,7 @@ type Login struct {
 	Password string `form:"password" json:"password" xml:"password"  binding:"required"`
 }
 
-func CheckLogin(c *gin.Context) {
+func LoginFunc(c *gin.Context) {
 	var loginParam Login
 	if err := c.ShouldBind(&loginParam); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
@@ -24,10 +25,7 @@ func CheckLogin(c *gin.Context) {
 	}
 
 	var user entity.User
-	if err := config.DB.Model(&user).Where("username = ?", loginParam.Username).Find(&user); err != nil {
-		c.JSON(http.StatusUnauthorized, gin.H{"status": "unauthorized"})
-		return
-	}
+	config.DB.Model(&user).Where("username = ?", loginParam.Username).Find(&user)
 	checkPassword := GenerateMD5Hash(user.Salt, loginParam.Password)
 	if user.Password == checkPassword {
 		jwtStr := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.MapClaims{
@@ -35,9 +33,45 @@ func CheckLogin(c *gin.Context) {
 			"username": user.Username,
 			"exp":      time.Now().Add(time.Hour * 24).Unix(),
 		})
-		c.JSON(http.StatusOK, gin.H{"data": jwtStr})
+
+		secretKey := "" // 替换为你的密钥
+		tokenString, err := jwtStr.SignedString([]byte(secretKey))
+		if err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "无法生成 JWT"})
+			return
+		}
+		c.JSON(http.StatusOK, gin.H{"data": tokenString})
 		return
 	}
+}
+
+func CheckLogin(c *gin.Context) {
+	var token = c.GetHeader("Authorization")
+	if token == "" {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "必须上传JWT签名信息"})
+	}
+
+	// 鉴权操作
+	var loginParam = jwt.MapClaims{}
+	jwtToken, err := jwt.ParseWithClaims(token, &loginParam, func(token *jwt.Token) (interface{}, error) {
+		if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
+			return nil, fmt.Errorf("unexpected signing method: %v", token.Header["alg"])
+		}
+		return []byte(""), nil // 使用相同的密钥
+	})
+
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "无效的 token"})
+		return
+	}
+	if loginParam, ok := jwtToken.Claims.(*jwt.MapClaims); ok && jwtToken.Valid {
+		fmt.Printf("%v", loginParam)
+		c.Next()
+	} else {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "无效的 token"})
+	}
+
+	// 后续操作
 }
 
 func GenerateMD5Hash(salt string, password string) string {

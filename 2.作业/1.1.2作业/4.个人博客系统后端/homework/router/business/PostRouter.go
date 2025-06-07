@@ -1,9 +1,14 @@
-package router
+package business
 
-import "github.com/gin-gonic/gin"
+import (
+	"fmt"
+	"github.com/gin-gonic/gin"
+)
 
 func GetPosts(c *gin.Context) {
 	// 查询 当前登录用户的 文章
+
+	fmt.Println("查询 当前登录用户的 文章")
 }
 
 func CreatePost(c *gin.Context) {

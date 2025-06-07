@@ -23,10 +23,7 @@ func Register(c *gin.Context) {
 
 	var user entity.User
 	var sameUserCount int64
-	if err := config.DB.Model(&user).Where("username = ?", registerParam.Username).Count(&sameUserCount); err != nil {
-		c.JSON(http.StatusUnauthorized, gin.H{"msg": "unauthorized"})
-		return
-	}
+	config.DB.Model(&user).Where("username = ?", registerParam.Username).Count(&sameUserCount)
 
 	if sameUserCount > 0 {
 		c.JSON(http.StatusForbidden, gin.H{"msg": "已存在该账号"})
