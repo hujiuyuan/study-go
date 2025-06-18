@@ -279,5 +279,116 @@ function getTupleValues((uint, string) memory _tuple) public pure returns (uint,
     return (_tuple[0], _tuple[1]); // 获取元组中的值
 }
 ```
+---
 
+
+# Solidity 基础数据类型转换示例
+
+Solidity 是一种静态类型语言，不同类型之间的转换需要显式进行。以下是 Solidity 中常见基础数据类型之间的转换示例：
+
+## 1. 整数类型之间的转换
+
+```solidity
+// 整数显式转换
+uint8 a = 10;
+uint16 b = uint16(a); // 小类型转大类型
+
+uint256 c = 256;
+uint8 d = uint8(c); // 大类型转小类型（会截断，256会变成0）
+
+int256 e = -10;
+uint256 f = uint256(e); // 有符号转无符号（负数会变成很大的正数）
+```
+
+## 2. 地址类型转换
+
+```solidity
+// 地址与整数转换
+address addr = 0x5B38Da6a701c568545dCfcB03FcB875f56beddC4;
+uint160 addrInt = uint160(addr); // 地址转整数
+
+address newAddr = address(addrInt); // 整数转地址
+
+// payable地址转换
+address payable payableAddr = payable(addr);
+```
+
+## 3. bytes 类型转换
+
+```solidity
+// bytes 类型转换
+bytes2 b2 = 0x1234;
+bytes4 b4 = bytes4(b2); // 短bytes转长bytes（前面补0）
+
+bytes4 b4full = 0x12345678;
+bytes2 b2short = bytes2(b4full); // 长bytes转短bytes（截断后面）
+
+// bytes 与 uint 转换
+uint256 num = 0x123456;
+bytes32 b32 = bytes32(num); // uint转bytes32
+
+bytes32 fullBytes = 0x1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef;
+uint256 numFromBytes = uint256(fullBytes); // bytes32转uint256
+```
+
+## 4. 字符串转换
+
+```solidity
+// 字符串与bytes转换
+string memory str = "hello";
+bytes memory byteStr = bytes(str); // string转bytes
+
+bytes memory byteData = new bytes(5);
+byteData[0] = 'h';
+byteData[1] = 'e';
+byteData[2] = 'l';
+byteData[3] = 'l';
+byteData[4] = 'o';
+string memory strFromBytes = string(byteData); // bytes转string
+```
+
+## 5. 固定大小字节数组与动态字节数组转换
+
+```solidity
+// bytes32 与 bytes 转换
+bytes32 fixedBytes = "fixed";
+bytes memory dynamicBytes = bytes(fixedBytes); // bytes32转动态bytes
+
+bytes memory dynBytes = new bytes(32);
+dynBytes[0] = 'd';
+dynBytes[1] = 'y';
+dynBytes[2] = 'n';
+bytes32 fixedFromDyn = bytes32(dynBytes); // 动态bytes转bytes32（必须长度匹配）
+```
+
+## 6. 布尔类型转换
+
+```solidity
+// 布尔类型转换
+uint256 zero = 0;
+bool isZero = zero != 0; // 整数转布尔（0为false，非0为true）
+
+bool flag = true;
+uint256 flagNum = flag ? 1 : 0; // 布尔转整数
+```
+
+## 7. 枚举类型转换
+
+```solidity
+// 枚举类型转换
+enum Color { Red, Green, Blue }
+Color myColor = Color.Green;
+uint colorIndex = uint(myColor); // 枚举转uint（Green对应1）
+
+uint index = 2;
+Color colorFromIndex = Color(index); // uint转枚举
+```
+
+## 注意事项
+
+1. **显式转换**：Solidity 要求大多数转换必须显式进行
+2. **截断风险**：大类型转小类型时可能丢失数据
+3. **符号处理**：有符号和无符号整数转换时要注意符号处理
+4. **长度匹配**：bytes 类型转换时要注意长度匹配
+5. **Gas 消耗**：复杂类型转换可能消耗较多 gas
 
