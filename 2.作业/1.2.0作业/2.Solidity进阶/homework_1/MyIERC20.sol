@@ -1,11 +1,8 @@
 // SPDX-License-Identifier: MIT
 // OpenZeppelin Contracts (last updated v5.1.0) (token/ERC20/IERC20.sol)
-
 pragma solidity ^0.8.0;
 
-import "@openzeppelin-contracts/contracts/token/ERC20/IERC20.sol";
-
-
+import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 /*
 
     合约包含以下标准 ERC20 功能：
@@ -27,16 +24,16 @@ contract MyIERC20 is IERC20 {
     string private _name = "MyToken";
     string private _symbol = "MTK";
     uint8 private _decimals = 18;
-    // 构造函数：初始化所有者和初始供应量
+    // 构造函数：初始化所有者和初始供应量            
     constructor(uint256 initialSupply) {
         _owner = msg.sender;
         _mint(msg.sender, initialSupply * 10**uint256(_decimals));
     }
 
     // 定义转账事件
-    event Transfer(address owner, address account, uint256 balance);
+    // event Transfer(address owner, address account, uint256 balance);
     // 定义授权事件
-    event Approval(address owner, address account, uint256 balance);
+    // event Approval(address owner, address account, uint256 balance);
 
     // 修饰符：仅允许所有者调用
     modifier onlyOwner() {
@@ -46,7 +43,7 @@ contract MyIERC20 is IERC20 {
 
     // 修饰符：仅允许所有者调用
     modifier requireSender() {
-        require(address(0) != msg.sender, "发起操作的账号违规失败！");
+        require(msg.sender != address(0), "Invalid sender");
         _;
     }
 
@@ -75,7 +72,7 @@ contract MyIERC20 is IERC20 {
     /*
     查询账户余额
     */
-    function balanceOf(address account) external view  returns (uint256) {
+    function balanceOf(address account) external view override returns (uint256) {
         return _balances[account];
     }
 
@@ -84,8 +81,7 @@ contract MyIERC20 is IERC20 {
     */
     function transfer(address to_account, uint256 value) external requireSender onlyOwner override returns (bool) {
         //  校验 账户&余额
-        require(_balances[msg.sender] >= value, "当前账户的余额不支持本次转账！");
-
+        require(_balances[msg.sender] >= value, unicode"当前账户的余额不支持本次转账！");
         _balances[msg.sender] -= value;
         _balances[to_account] += value;
         // 发送转账消息
@@ -108,8 +104,12 @@ contract MyIERC20 is IERC20 {
     代扣转账
     */
     function transferFrom(address from_account, address to_account, uint256 value) external requireSender onlyOwner override returns (bool) {
-        require(_allowances[msg.sender][from_account] >= value, "授权额度不足！");
-        require(_balances[from_account] >= value, "当前账户的余额不支持本次授权！");
+        string memory reason_1 = unicode"授权额度不足！";
+        string memory reason_2 = unicode"当前账户的余额不支持本次授权！";
+        
+        
+        require(_allowances[msg.sender][from_account] >= value, reason_1);
+        require(_balances[from_account] >= value, reason_2);
 
         _allowances[msg.sender][from_account] -= value;
         _balances[from_account] -= value;
@@ -117,5 +117,15 @@ contract MyIERC20 is IERC20 {
 
         emit Transfer(from_account, to_account, value);
         return true;
+    }
+
+    // 获取总供应量
+    function totalSupply() external view override returns (uint256) {
+        return _totalSupply;
+    }
+
+    // 获取授权金额
+    function allowance(address owner, address spender) external view override returns (uint256) {
+        return _allowances[owner][spender];
     }
 }
