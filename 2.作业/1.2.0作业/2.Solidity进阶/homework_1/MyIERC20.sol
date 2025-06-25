@@ -24,6 +24,14 @@ contract MyIERC20 is IERC20 {
     // 授权额度
     mapping(address => mapping(address => uint256)) private _allowances;
     uint256 private _totalSupply; // 总供应量
+    string private _name = "MyToken";
+    string private _symbol = "MTK";
+    uint8 private _decimals = 18;
+    // 构造函数：初始化所有者和初始供应量
+    constructor(uint256 initialSupply) {
+        _owner = msg.sender;
+        _mint(msg.sender, initialSupply * 10**uint256(_decimals));
+    }
 
     // 定义转账事件
     event Transfer(address owner, address account, uint256 balance);
@@ -36,11 +44,13 @@ contract MyIERC20 is IERC20 {
         _;
     }
 
-    // 构造函数：初始化所有者和初始供应量
-    constructor(uint256 initialSupply) {
-        _owner = msg.sender; // 设置部署者为所有者
-        _mint(msg.sender, initialSupply * 10**uint256(10)); // 初始铸造代币给部署者
+    // 修饰符：仅允许所有者调用
+    modifier requireSender() {
+        require(address(0) != msg.sender, "发起操作的账号违规失败！");
+        _;
     }
+
+
 
     /*
     address(0) 代表一个 空账户，
@@ -72,22 +82,40 @@ contract MyIERC20 is IERC20 {
     /*
     转账
     */
-    function transfer(address to_account, uint256 value) external view  returns (uint256) {
+    function transfer(address to_account, uint256 value) external requireSender onlyOwner override returns (bool) {
         //  校验 账户&余额
-        require(address(0) == msg.sender, "当前账号发起转账失败！");
-        require(_balances[msg.sender] < value, "当前账户的余额不支持本次转账！");
+        require(_balances[msg.sender] >= value, "当前账户的余额不支持本次转账！");
 
         _balances[msg.sender] -= value;
         _balances[to_account] += value;
         // 发送转账消息
         emit Transfer(msg.sender, to_account, value);
-        return _balances[account];
+        return true;
     }
 
     /*
     授权
     */
-    function approve(address from_account, uint256 value)  {
-        require(address(0) == msg.sender, "当前账号发起转账失败！");
+    function approve(address from_account, uint256 value) external requireSender onlyOwner override returns (bool) {
+        // 授权当给前账号，授权 from_account 的 value额度
+        _allowances[msg.sender][from_account] = value;
+
+        emit Approval(msg.sender, from_account, value);
+        return true;
+    }
+
+    /*
+    代扣转账
+    */
+    function transferFrom(address from_account, address to_account, uint256 value) external requireSender onlyOwner override returns (bool) {
+        require(_allowances[msg.sender][from_account] >= value, "授权额度不足！");
+        require(_balances[from_account] >= value, "当前账户的余额不支持本次授权！");
+
+        _allowances[msg.sender][from_account] -= value;
+        _balances[from_account] -= value;
+        _balances[to_account] += value;
+
+        emit Transfer(from_account, to_account, value);
+        return true;
     }
 }
